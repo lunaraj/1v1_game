@@ -103,7 +103,7 @@ class player(object):
         self.jumpCount = 0
         self.crouchCount = 0
         self.window = window
-        self.isJump = True
+        self.jump = True
         self.doubleJump = False
         self.cooldown = 0
         self.cooldownSlide = 0
@@ -119,6 +119,8 @@ class player(object):
         self.rightKey = right
         self.leftKey = left
         self.crouchKey = crouch
+        self.platform = 0
+        self.counter = 0
     
     def animations(self):
         if self.walkCount + 1 >= 18 * 4:
@@ -140,7 +142,7 @@ class player(object):
             self.attack = False
             self.attackCount = 0
         if not(self.attack):
-            if not(self.isJump): # ground moves
+            if not(self.jump): # ground moves
                 if self.slide and self.right_walk:
                     self.ani = self.slideRight[self.slideCount//6]
                     self.slideCount += 1
@@ -202,22 +204,37 @@ class player(object):
         self.rect = self.ani.get_rect(midbottom = (self.x, self.y))
         window.blit(self.ani, self.rect)
 
-    def surfaces(self, other, type):
+    def surfaces(self, surface, type, surfaces):
         if type == 'platform':
-            if self.rect.colliderect(other):
-                self.y = other.top + 1
-                self.isJump = False
+            if self.rect.colliderect(surfaces[0]):
+                self.y = surfaces[0].top + 1
+                self.jump = False
                 self.doubleJump = False
                 self.jumpCount = 0
                 self.crouch = False
-                self.yvel = 0   
+                self.yvel = 0
+                self.platform = 0
+                self.counter = 0
+
+            elif self.rect.colliderect(surfaces[1]):
+                self.y = surfaces[1].top + 1
+                self.jump = False
+                self.doubleJump = False
+                self.jumpCount = 0
+                self.crouch = False
+                self.yvel = 0
+                self.platform = 1
+                self.counter = 0
+
             else:
-                self.isJump = True
+                self.jump = True
         
+
+            if self.cooldown == 0 and self.platform == 0:
+                self.y = surfaces[0].top
             
-            if self.cooldown == 0:
-                self.y = other.top
-                
+            elif self.cooldown == 0 and self.platform == 1:
+                self.y = surfaces[1].top
 
     def move(self):
         keys = pg.key.get_pressed()
@@ -226,7 +243,6 @@ class player(object):
         self.cooldownAttack += 1
         if keys[self.attackKey] and self.cooldownAttack >= 32:
             self.attack = True
-            print(self.cooldownAttack)
             if self.cooldownAttack <= 40 and self.cooldownAttack >= 32:
                 self.attackAnimation += 1
                 if self.attackAnimation > 2:
@@ -235,27 +251,27 @@ class player(object):
             else:
                 self.attackAnimation = 0
                 self.cooldownAttack = 0
-            if self.isJump:
+            if self.jump:
                 self.attackAnimation = 2
             self.attackCount = 0
         if keys[self.jumpKey] and self.doubleJump == False:
-            if not(self.isJump):
-                self.isJump = True
+            if not(self.jump):
+                self.jump = True
                 self.yvel = -10
                 self.jumpCount = 0
                 self.cooldown = 0
             elif self.cooldown >= 20:
                 if self.cooldown <= 21 and self.doubleJump == False and self.yvel == -10:
-                    self.isJump = True
+                    self.jump = True
                     self.yvel = -13.7
                     self.doubleJump = True
                     self.jumpCount = 0
                 else:
-                    self.isJump = True
+                    self.jump = True
                     self.yvel = -10
                     self.doubleJump = True
                     self.jumpCount = 0
-        elif self.isJump == True:
+        elif self.jump == True:
             if keys[self.leftKey]:
                 self.x -= self.vel
                 self.left = True
@@ -281,17 +297,17 @@ class player(object):
                 self.left_walk = True
                 self.x += self.vel
                 self.slideCount = 0
-            elif keys[self.leftKey] and self.isJump == False:
+            elif keys[self.leftKey] and self.jump == False:
                 self.left_walk = True
                 self.right_walk = False
                 self.x -= self.vel
                 self.crouch = False
-            elif keys[self.rightKey] and self.isJump == False:
+            elif keys[self.rightKey] and self.jump == False:
                 self.left_walk = False
                 self.right_walk = True
                 self.x += self.vel
                 self.crouch = False
-            elif keys[self.crouchKey] and self.isJump == False:
+            elif keys[self.crouchKey] and self.jump == False:
                 self.crouch = True
             else:
                 self.left_walk = False
@@ -310,7 +326,7 @@ class background(object):
         self.window = window
     def draw(self):
         pg.draw.rect(self.window, self.color, (self.x, self.y, self.width, self.height))
-    
+        
     def rect(self, color, dimensions):
         pg.draw.rect(window, color, (dimensions[0] -50, dimensions[1], dimensions[2] + 100, dimensions[3]))
         y = pg.draw.rect(window, color, dimensions)
@@ -324,9 +340,10 @@ def playerMove(player1, player2):
     player1.draw()
     player2.draw()
 
-def playerSurfaces(player1, player2, object):
-    player1.surfaces(object, 'platform')
-    player2.surfaces(object, 'platform')
+def playerSurfaces(player1, player2, object, objects):
+    x = player1.surfaces(object, 'platform', objects)
+    y = player2.surfaces(object, 'platform', objects)
+    
 
 
 def main():
@@ -335,15 +352,16 @@ def main():
     player1 = player(window, pg.K_w, pg.K_a, pg.K_d, pg.K_s, pg.K_f, walkLeft, walkRight, idleLeft, idleRight, jumpLeft, jumpRight, crouchLeft, crouchRight, slideLeft, slideRight, attack0Left, attack1Left, attack2Left, attack0Right, attack1Right, attack2Right)
     player2 = player(window, pg.K_i, pg.K_j, pg.K_l, pg.K_k, pg.K_h, walkLeft2, walkRight2, idleLeft2, idleRight2, jumpLeft2, jumpRight2, crouchLeft2, crouchRight2, slideLeft2, slideRight2, attack0Left2, attack1Left2, attack2Left2, attack0Right2, attack1Right2, attack2Right2)
     bg = background(window)
+    platforms = [bg.rect((0,255,0), (150, 500, 850, 100)), bg.rect((0,255,0), (200, 200, 200, 100))]
     while run:
-        mainPlatform = bg.rect((0,255,0), (150, 500, 850, 100))
-        secondPlatform = bg.rect((0,255,0), (200, 200, 200, 100))
+        platforms[0] = bg.rect((0,255,0), (150, 500, 850, 100))
+        platforms[1] = bg.rect((0,255,0), (200, 200, 200, 100))
         clock.tick(60)
         pg.display.update()
         bg.draw()
         playerMove(player1,player2)
-        playerSurfaces(player1, player2, mainPlatform)
-        playerSurfaces(player1, player2, secondPlatform)
+        playerSurfaces(player1, player2, platforms[0], platforms)
+        playerSurfaces(player1, player2, platforms[1], platforms)
         for event in pg.event.get():
             if event.type == pg.QUIT:
                 run = False 
