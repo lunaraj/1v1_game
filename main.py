@@ -207,7 +207,10 @@ class player(object):
 
     def surfaces(self, surface, type, surfaces):
         if type == 'platform':
-            if self.rect.colliderect(surfaces[0]):
+            ground = surfaces[0]
+            platform1 = surfaces[1]
+            print(f'ground = {ground}, platform1 = {platform1}')
+            if self.rect.colliderect(ground):
                 self.y = surfaces[0].top + 1
                 self.jump = False
                 self.doubleJump = False
@@ -217,7 +220,7 @@ class player(object):
                 self.platform = 0
                 self.counter = 0
 
-            elif self.rect.colliderect(surfaces[1]):
+            elif self.rect.colliderect(platform1):
                 self.y = surfaces[1].top + 1
                 self.jump = False
                 self.doubleJump = False
@@ -262,9 +265,9 @@ class player(object):
                     self.cooldownAttack = 0
                     self.comboCount += 1
                     if keys[self.leftKey]:
-                        self.x -= 20
+                        self.x -= 30                            
                     if keys[self.rightKey]:
-                        self.x += 20
+                        self.x += 30
                 else:
                     self.attackAnimation = 0
                     self.cooldownAttack = 0
