@@ -121,6 +121,7 @@ class player(object):
         self.crouchKey = crouch
         self.platform = 0
         self.counter = 0
+        self.comboCount = 0
     
     def animations(self):
         if self.walkCount + 1 >= 18 * 4:
@@ -228,6 +229,9 @@ class player(object):
 
             else:
                 self.jump = True
+                if self.counter == 0 and self.yvel == 0:
+                    self.jumpCount = 24
+                self.counter += 1
         
 
             if self.cooldown == 0 and self.platform == 0:
@@ -242,18 +246,32 @@ class player(object):
         self.cooldownSlide += 1
         self.cooldownAttack += 1
         if keys[self.attackKey] and self.cooldownAttack >= 32:
-            self.attack = True
-            if self.cooldownAttack <= 40 and self.cooldownAttack >= 32:
-                self.attackAnimation += 1
-                if self.attackAnimation > 2:
+            if self.comboCount == 3:
+                if self.cooldownAttack >= 60:
+                    self.attack = True
+                    self.comboCount = 0
                     self.attackAnimation = 0
-                self.cooldownAttack = 0
+                    self.cooldownAttack = 0
+                    self.attackCount = 0
             else:
-                self.attackAnimation = 0
-                self.cooldownAttack = 0
-            if self.jump:
-                self.attackAnimation = 2
-            self.attackCount = 0
+                self.attack = True
+                if self.cooldownAttack <= 40 and self.cooldownAttack >= 32:
+                    self.attackAnimation += 1
+                    if self.attackAnimation > 2:
+                        self.attackAnimation = 0
+                    self.cooldownAttack = 0
+                    self.comboCount += 1
+                    if keys[self.leftKey]:
+                        self.x -= 20
+                    if keys[self.rightKey]:
+                        self.x += 20
+                else:
+                    self.attackAnimation = 0
+                    self.cooldownAttack = 0
+                    self.comboCount = 0
+                if self.jump:
+                    self.attackAnimation = 2
+                self.attackCount = 0
         if keys[self.jumpKey] and self.doubleJump == False:
             if not(self.jump):
                 self.jump = True
@@ -314,6 +332,9 @@ class player(object):
                 self.right_walk = False
                 self.crouch = False
                 self.slide = False
+        if self.y >= 630:
+            print("penis")
+            self.x, self.y = 560, 0
 
 
 class background(object):
@@ -352,10 +373,10 @@ def main():
     player1 = player(window, pg.K_w, pg.K_a, pg.K_d, pg.K_s, pg.K_f, walkLeft, walkRight, idleLeft, idleRight, jumpLeft, jumpRight, crouchLeft, crouchRight, slideLeft, slideRight, attack0Left, attack1Left, attack2Left, attack0Right, attack1Right, attack2Right)
     player2 = player(window, pg.K_i, pg.K_j, pg.K_l, pg.K_k, pg.K_h, walkLeft2, walkRight2, idleLeft2, idleRight2, jumpLeft2, jumpRight2, crouchLeft2, crouchRight2, slideLeft2, slideRight2, attack0Left2, attack1Left2, attack2Left2, attack0Right2, attack1Right2, attack2Right2)
     bg = background(window)
-    platforms = [bg.rect((0,255,0), (150, 500, 850, 100)), bg.rect((0,255,0), (200, 200, 200, 100))]
+    platforms = [0,0]
     while run:
-        platforms[0] = bg.rect((0,255,0), (150, 500, 850, 100))
-        platforms[1] = bg.rect((0,255,0), (200, 200, 200, 100))
+        platforms[0] = bg.rect((0,255,0), (150, 500, 850, 50))
+        platforms[1] = bg.rect((0,255,0), (200, 350, 200, 50))
         clock.tick(60)
         pg.display.update()
         bg.draw()
