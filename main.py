@@ -207,13 +207,10 @@ class player(object):
 
     def surfaces(self, surface, type, surfaces):
         if type == 'platform':
-            platform0top = surfaces[0]
-            platform1top = surfaces[1]
-            platform0bottom = surfaces[0]
-            platform1bottom = surfaces[0]
-            platform0top[3] = 1
-            platform1top[3] = 1
-            platform0bottom
+            platform0top = (surfaces[0][0], surfaces[0][1], surfaces[0][2], 1)
+            platform1top = (surfaces[1][0], surfaces[1][1], surfaces[1][2], 1)
+            platform0bottom = (surfaces[0][0], surfaces[0].bottom - 5, surfaces[0][2], 1) 
+            platform1bottom = (surfaces[1][0], surfaces[1].bottom - 5, surfaces[1][2], 1) 
             if self.rect.colliderect(platform0top):
                 self.y = surfaces[0].top + 1
                 self.jump = False
@@ -233,6 +230,9 @@ class player(object):
                 self.yvel = 0
                 self.platform = 1
                 self.counter = 0
+            
+            elif self.rect.colliderect(platform0bottom) or self.rect.colliderect(platform1bottom):
+                self.yvel = 1
             
             else:
                 self.jump = True
@@ -356,7 +356,7 @@ class background(object):
         pg.draw.rect(self.window, self.color, (self.x, self.y, self.width, self.height))
         
     def rect(self, color, dimensions):
-        pg.draw.rect(window, color, (dimensions[0] -50, dimensions[1], dimensions[2] + 100, dimensions[3]))
+        pg.draw.rect(window, color, (dimensions[0] -50, dimensions[1], dimensions[2] + 80, dimensions[3]))
         y = pg.draw.rect(window, color, dimensions)
         return y
 
@@ -383,7 +383,7 @@ def main():
     platforms = [0,0]
     while run:
         platforms[0] = bg.rect((0,255,0), (150, 500, 850, 50))
-        platforms[1] = bg.rect((0,255,0), (200, 350, 200, 50))
+        platforms[1] = bg.rect((0,255,0), (200, 325, 200, 50))
         clock.tick(60)
         pg.display.update()
         bg.draw()
