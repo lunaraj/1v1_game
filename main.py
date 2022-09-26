@@ -207,10 +207,14 @@ class player(object):
 
     def surfaces(self, surface, type, surfaces):
         if type == 'platform':
-            ground = surfaces[0]
-            platform1 = surfaces[1]
-            print(f'ground = {ground}, platform1 = {platform1}')
-            if self.rect.colliderect(ground):
+            platform0top = surfaces[0]
+            platform1top = surfaces[1]
+            platform0bottom = surfaces[0]
+            platform1bottom = surfaces[0]
+            platform0top[3] = 1
+            platform1top[3] = 1
+            platform0bottom
+            if self.rect.colliderect(platform0top):
                 self.y = surfaces[0].top + 1
                 self.jump = False
                 self.doubleJump = False
@@ -220,7 +224,7 @@ class player(object):
                 self.platform = 0
                 self.counter = 0
 
-            elif self.rect.colliderect(platform1):
+            elif self.rect.colliderect(platform1top):
                 self.y = surfaces[1].top + 1
                 self.jump = False
                 self.doubleJump = False
@@ -229,7 +233,7 @@ class player(object):
                 self.yvel = 0
                 self.platform = 1
                 self.counter = 0
-
+            
             else:
                 self.jump = True
                 if self.counter == 0 and self.yvel == 0:
